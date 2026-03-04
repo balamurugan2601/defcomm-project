@@ -249,7 +249,7 @@ The migration wizard shows:
 
 ### Step 1: Create `.env.aiven` File
 
-In `e:\main project\defcomm-backend\`, create a new file `.env.aiven`:
+In `e:\DEFCOMM\defcomm-backend\`, create a new file `.env.aiven`:
 
 ```env
 NODE_ENV=production
@@ -302,7 +302,7 @@ EXIT;
 Ensure sensitive credentials aren't committed:
 
 ```bash
-# In e:\main project\defcomm-backend\.gitignore
+# In e:\DEFCOMM\defcomm-backend\.gitignore
 # Add this line if not already present:
 .env.aiven
 ```
@@ -315,7 +315,7 @@ Ensure sensitive credentials aren't committed:
 
 ```powershell
 # In backend directory
-cd "e:\main project\defcomm-backend"
+cd "e:\DEFCOMM\defcomm-backend"
 Copy-Item .env .env.local.backup
 ```
 

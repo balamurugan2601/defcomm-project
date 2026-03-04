@@ -15,7 +15,7 @@
 
 ### 1. Check MySQL Readiness (5 mins)
 ```powershell
-cd "e:\main project\defcomm-backend"
+cd "e:\DEFCOMM\defcomm-backend"
 .\scripts\check-mysql-aiven-ready.ps1
 ```
 
