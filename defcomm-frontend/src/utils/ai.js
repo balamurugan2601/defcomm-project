@@ -32,11 +32,13 @@ export const analyzeThreat = async (text) => {
             body: JSON.stringify({
                 contents: [{
                     parts: [{
-                        text: `Act as a security intelligence officer. Analyze the following message for operational security threats (e.g. attacks, breaches, intelligence leaks). Routine conversation or news discussion is SAFE.
-            
-            Message: "${text}"
-            
-            Is this an ACTUAL operational threat or is it SAFE? Respond with ONLY the word "THREAT" or "SAFE".`
+                        text: `Act as a highly strictly military intelligence officer. Analyze the following message for ACTIVE, IMMINENT operational security threats (e.g., orchestrating an attack, active security breaches, leaking classified coordinates). 
+
+CRITICAL RULE: People asking about an attack, family members checking in, discussing news about attacks, or using trigger words in a conversational/past-tense context are strictly "SAFE". ONLY classify as "THREAT" if the sender is actively plotting, executing, or warning of an ongoing operational compromise.
+        
+Message: "${text}"
+        
+Is this an ACTUAL operational threat or is it SAFE? Respond with ONLY the word "THREAT" or "SAFE".`
                     }]
                 }]
             })
