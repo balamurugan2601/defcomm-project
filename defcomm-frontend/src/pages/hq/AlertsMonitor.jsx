@@ -46,27 +46,29 @@ const AlertsMonitor = () => {
             const pendingIds = new Set(decrypted.filter(m => m.analyzing).map(m => m.id));
             setAnalyzingIds(pendingIds);
 
-            await Promise.all(
-                decrypted
-                    .filter((msg) => msg.analyzing)
-                    .map(async (msg) => {
-                        let isThreat = false;
-                        if (threatKeywords.test(msg.decrypted)) {
-                            isThreat = await analyzeThreat(msg.decrypted);
-                        }
-                        // Update this single message in state
-                        setMessages((prev) =>
-                            prev
-                                .map((m) => m.id === msg.id ? { ...m, isThreat, analyzing: false } : m)
-                                .filter((m) => m.isThreat || m.securityStatus === "resolved" || m.analyzing)
-                        );
-                        setAnalyzingIds((prev) => {
-                            const next = new Set(prev);
-                            next.delete(msg.id);
-                            return next;
-                        });
-                    })
-            );
+            const toAnalyze = decrypted.filter((msg) => msg.analyzing);
+
+            for (const msg of toAnalyze) {
+                let isThreat = false;
+                if (threatKeywords.test(msg.decrypted)) {
+                    isThreat = await analyzeThreat(msg.decrypted);
+                    // Add a small 1-second delay to avoid spamming the Gemini API and hitting 429s
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+
+                // Update this single message in state
+                setMessages((prev) =>
+                    prev
+                        .map((m) => m.id === msg.id ? { ...m, isThreat, analyzing: false } : m)
+                        .filter((m) => m.isThreat || m.securityStatus === "resolved" || m.analyzing)
+                );
+
+                setAnalyzingIds((prev) => {
+                    const next = new Set(prev);
+                    next.delete(msg.id);
+                    return next;
+                });
+            }
         } catch (err) {
             setError(err.response?.data?.message || "Failed to load flagged messages");
             setLoading(false);
