@@ -31,6 +31,9 @@ const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 
+// Trust reverse proxy for rate limiting (Render, Heroku, etc.)
+app.set('trust proxy', 1);
+
 // --------------- Middleware Stack (ordered) ---------------
 
 // CORS — must be before other middleware for proper preflight handling
