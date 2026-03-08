@@ -15,7 +15,7 @@ const authUser = asyncHandler(async (req, res) => {
         if (user.status === 'rejected') {
             return res.status(403).json({ message: 'Your account has been rejected by HQ. Access denied.' });
         }
-        generateToken(res, user.id);
+        const token = generateToken(res, user.id);
 
         res.json({
             _id: user.id,
@@ -23,6 +23,7 @@ const authUser = asyncHandler(async (req, res) => {
             role: user.role,
             status: user.status,
             isApproved: user.status === 'approved',
+            token: token,
         });
     } else {
         res.status(401).json({ message: 'Invalid username or password' });
@@ -45,7 +46,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const user = await authService.createUser({ username, password, role });
 
     if (user) {
-        generateToken(res, user.id);
+        const token = generateToken(res, user.id);
 
         res.status(201).json({
             _id: user.id,
@@ -53,6 +54,7 @@ const registerUser = asyncHandler(async (req, res) => {
             role: user.role,
             status: user.status,
             isApproved: user.status === 'approved',
+            token: token,
         });
     } else {
         res.status(400).json({ message: 'Invalid user data' });
@@ -63,13 +65,6 @@ const registerUser = asyncHandler(async (req, res) => {
 // @route   POST /api/auth/logout
 // @access  Public
 const logoutUser = (req, res) => {
-    res.cookie('jwt', '', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV !== 'development',
-        sameSite: 'lax',
-        expires: new Date(0),
-        path: '/',
-    });
     res.status(200).json({ message: 'Logged out successfully' });
 };
 

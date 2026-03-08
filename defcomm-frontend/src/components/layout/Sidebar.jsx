@@ -1,11 +1,37 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/useAuth';
+import { useState, useEffect } from 'react';
+import { getRecentMessages } from '../../services/api';
+import { decryptMessage } from '../../utils/encrypt';
 
 const Sidebar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [alertCount, setAlertCount] = useState(0);
 
   if (!user) return null;
+
+  // Fetch active threat count for the badge (HQ only)
+  useEffect(() => {
+    if (user.role !== 'hq') return;
+
+    const checkAlerts = async () => {
+      try {
+        const messages = await getRecentMessages(20);
+        const threatKeywords = /attack|perimeter|breach|security|urgent|critical|hostile|engage|destroy|intercept/i;
+        const activeThreats = messages.filter(
+          (msg) => msg.securityStatus !== 'resolved' && threatKeywords.test(decryptMessage(msg.encryptedText))
+        );
+        setAlertCount(activeThreats.length);
+      } catch {
+        // Silently fail — badge is non-critical
+      }
+    };
+
+    checkAlerts();
+    const interval = setInterval(checkAlerts, 30000); // Refresh every 30s
+    return () => clearInterval(interval);
+  }, [user.role]);
 
   const handleLogout = () => {
     logout();
@@ -19,6 +45,7 @@ const Sidebar = () => {
 
   const hqMenu = [
     { name: 'Dashboard', path: '/dashboard' },
+    { name: 'Alerts', path: '/hq/alerts' },
     { name: 'Approvals', path: '/approvals' },
     { name: 'Manage Groups', path: '/hq/groups' },
     { name: 'Manage Users', path: '/hq/users' }
@@ -39,13 +66,16 @@ const Sidebar = () => {
               key={item.path}
               to={item.path}
               className={({ isActive }) =>
-                `block px-4 py-3 rounded-md transition-all duration-200 font-medium ${isActive
+                `block px-4 py-3 rounded-md transition-all duration-200 font-medium relative ${isActive
                   ? 'bg-white text-[#014BAA] shadow-md transform translate-x-1'
                   : 'text-white/80 hover:bg-white/10 hover:text-white'
                 }`
               }
             >
               {item.name}
+              {item.name === 'Alerts' && alertCount > 0 && (
+                <span className="absolute top-2 right-3 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse" />
+              )}
             </NavLink>
           ))}
         </nav>

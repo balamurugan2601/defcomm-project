@@ -10,6 +10,7 @@ import HQDashboard from "./pages/hq/HQDashboard";
 import Approvals from "./pages/hq/Approvals";
 import ManageGroups from "./pages/hq/ManageGroups";
 import ManageUsers from "./pages/hq/ManageUsers";
+import AlertsMonitor from "./pages/hq/AlertsMonitor";
 
 import NotFound from "./pages/NotFound";
 import { ChatProvider } from "./context/ChatContext";
@@ -84,6 +85,15 @@ function App() {
                 element={
                   <ProtectedRoute role="hq">
                     <ManageUsers />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/hq/alerts"
+                element={
+                  <ProtectedRoute role="hq">
+                    <AlertsMonitor />
                   </ProtectedRoute>
                 }
               />

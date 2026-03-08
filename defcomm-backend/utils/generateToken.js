@@ -16,18 +16,7 @@ const generateToken = (res, userId) => {
         expiresIn,
     });
 
-    // Calculate maxAge from JWT_EXPIRE (default 30 days)
-    const maxAge = 30 * 24 * 60 * 60 * 1000;
-
-    const isProduction = process.env.NODE_ENV === 'production';
-
-    res.cookie('jwt', token, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax', // 'none' required for cross-site in production
-        maxAge,
-        path: '/', // Ensure cookie is root-scoped
-    });
+    return token;
 };
 
 module.exports = generateToken;

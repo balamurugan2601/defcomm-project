@@ -42,7 +42,7 @@ const connectDB = async () => {
         console.log('MySQL Database connected successfully');
 
         // Sync all models (create tables if they don't exist)
-        await sequelize.sync({ alter: process.env.NODE_ENV === 'development' });
+        await sequelize.sync({ alter: false });
         console.log('Database synchronized');
     } catch (error) {
         console.error('Unable to connect to the database:', error.message);

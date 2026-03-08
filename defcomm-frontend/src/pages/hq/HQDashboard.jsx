@@ -29,7 +29,13 @@ const HQDashboard = () => {
         getRecentMessages(5),
       ]);
       setStats(statsData);
-      setRecentMessages(messagesData);
+
+      const processedMessages = messagesData.map((msg) => ({
+        ...msg,
+        decrypted: decryptMessage(msg.encryptedText),
+      }));
+
+      setRecentMessages(processedMessages);
       setError(null);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load dashboard data');
@@ -67,6 +73,7 @@ const HQDashboard = () => {
             {error}
           </div>
         )}
+
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
           <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -112,9 +119,23 @@ const HQDashboard = () => {
                       <div className="text-gray-500 text-xs mt-1">
                         Group: <span className="text-[#014BAA] font-medium">{msg.groupName}</span>
                       </div>
+                      {msg.isThreat && (
+                        <div className="mt-1 text-[10px] font-bold text-red-600 uppercase tracking-wider flex items-center">
+                          <span className="w-1.5 h-1.5 bg-red-600 rounded-full mr-1.5 animate-pulse"></span>
+                          AI Verified Threat
+                        </div>
+                      )}
+                      {msg.securityStatus === 'resolved' && (
+                        <div className="mt-1 text-[10px] font-bold text-green-600 uppercase tracking-wider flex items-center">
+                          <span className="w-1.5 h-1.5 bg-green-600 rounded-full mr-1.5"></span>
+                          Threat Resolved
+                        </div>
+                      )}
                     </div>
-                    <div className="text-gray-400 text-xs font-mono">
-                      {formatTimestamp(msg.timestamp)}
+                    <div className="flex flex-col items-end">
+                      <div className="text-gray-400 text-xs font-mono">
+                        {formatTimestamp(msg.timestamp)}
+                      </div>
                     </div>
                   </div>
                 </div>

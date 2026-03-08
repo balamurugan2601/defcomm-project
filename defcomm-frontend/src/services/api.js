@@ -4,22 +4,49 @@ const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api'
 
 const api = axios.create({
   baseURL: API_URL,
-  withCredentials: true, // Enable cookies for JWT
+  withCredentials: true, // Still allow cookies (like for checkAuth) but we'll prioritize Bearer
 });
+
+// Intercept requests to inject the tab-specific token
+api.interceptors.request.use((config) => {
+  const token = sessionStorage.getItem('jwt_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Intercept responses to clear invalid tokens
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      sessionStorage.removeItem('jwt_token');
+    }
+    return Promise.reject(error);
+  }
+);
 
 // --------------- Auth API ---------------
 
 export const register = async (username, password, role) => {
   const response = await api.post('/auth/register', { username, password, role });
+  if (response.data.token) {
+    sessionStorage.setItem('jwt_token', response.data.token);
+  }
   return response.data;
 };
 
 export const login = async (username, password) => {
   const response = await api.post('/auth/login', { username, password });
+  if (response.data.token) {
+    sessionStorage.setItem('jwt_token', response.data.token);
+  }
   return response.data;
 };
 
 export const logout = async () => {
+  sessionStorage.removeItem('jwt_token');
   const response = await api.post('/auth/logout');
   return response.data;
 };
@@ -122,6 +149,18 @@ export const getAdminStats = async () => {
 export const getRecentMessages = async (limit = 10) => {
   const response = await api.get('/admin/recent-messages', {
     params: { limit },
+  });
+  return response.data;
+};
+
+export const resolveThreat = async (messageId) => {
+  const response = await api.patch(`/admin/messages/${messageId}/resolve`);
+  return response.data;
+};
+
+export const getFlaggedMessages = async (status = 'all', limit = 50) => {
+  const response = await api.get('/admin/flagged-messages', {
+    params: { status, limit },
   });
   return response.data;
 };

@@ -1,0 +1,37 @@
+# DefComm Workflow Flowchart
+
+Below is a visual representation of the secure communication pipeline, from registration to recipient decryption.
+
+```mermaid
+graph TD
+    %% Define Styles
+    classDef hq fill:#f96,stroke:#333,stroke-width:2px;
+    classDef secure fill:#bbf,stroke:#333,stroke-width:2px;
+    classDef storage fill:#dfd,stroke:#333,stroke-width:2px;
+
+    %% Workflow Steps
+    A([1. Operative Registration]) --> B{2. HQ Approval};
+    B -- Denied --> C[Access Blocked];
+    B -- Approved --> D[3. Client AES-256 Encryption];
+    
+    D --> E[4. Secure HTTPS Transmission];
+    E --> F[(5. MySQL Encrypted Storage)];
+    
+    F --> G[6. Real-time Threat Scanning];
+    G --> H([7. HQ Dashboard Alert]);
+    
+    G --> I[8. Recipient Fetches & Decrypts];
+
+    %% Applying Styles
+    class B,H hq;
+    class D,E,I secure;
+    class F storage;
+```
+
+---
+
+## How to Read This Diagram
+- **Orange Nodes**: Represent **HQ Governance** and administrative control points.
+- **Blue Nodes**: Represent **Security Operations** handled on the client-side/transmission layer.
+- **Green Node**: Represents the **State of Data** (Zero-Knowledge persistence in the database).
+- **Arrows**: Show the logical progression of a message from the sender to the command dashboard and the final recipient.

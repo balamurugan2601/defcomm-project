@@ -5,7 +5,11 @@ const { User } = require('../models');
  * Protect routes — validates JWT from cookies and attaches user to request.
  */
 const protect = async (req, res, next) => {
-    const token = req.cookies.jwt;
+    let token;
+
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+        token = req.headers.authorization.split(' ')[1];
+    }
 
     if (!token) {
         console.warn(`[AUTH] Missing Token for request to ${req.originalUrl} from host ${req.get('host')}`);

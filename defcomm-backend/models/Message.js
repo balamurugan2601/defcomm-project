@@ -30,6 +30,11 @@ const Message = sequelize.define('Message', {
             notEmpty: true,
         },
     },
+    securityStatus: {
+        type: DataTypes.ENUM('active', 'flagged', 'resolved'),
+        defaultValue: 'active',
+        allowNull: false,
+    },
     // NO plaintext field — encryption is client-side only
 }, {
     tableName: 'messages',

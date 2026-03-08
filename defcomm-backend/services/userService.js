@@ -1,4 +1,4 @@
-const { User } = require('../models');
+const { User, Message, GroupMember, Group } = require('../models');
 
 /**
  * Get all users with pending approval status.
@@ -53,6 +53,26 @@ const deleteUser = async (userId) => {
     const user = await User.findByPk(userId);
     if (!user) return null;
 
+    // Prevent deletion of HQ admin accounts via the UI
+    if (user.role === 'hq') {
+        throw new Error('Admin accounts cannot be deleted from the UI. Use the database directly.');
+    }
+
+    // Find groups created by this user
+    const ownedGroups = await Group.findAll({ where: { createdBy: userId }, attributes: ['id'] });
+    const ownedGroupIds = ownedGroups.map(g => g.id);
+
+    // Remove all messages in groups owned by this user
+    if (ownedGroupIds.length > 0) {
+        await Message.destroy({ where: { groupId: ownedGroupIds } });
+        await GroupMember.destroy({ where: { groupId: ownedGroupIds } });
+        await Group.destroy({ where: { createdBy: userId } });
+    }
+
+    // Remove remaining records tied to this user
+    await Message.destroy({ where: { senderId: userId } });
+    await GroupMember.destroy({ where: { userId } });
+
     await user.destroy();
     return true;
 };
@@ -61,7 +81,7 @@ const deleteUser = async (userId) => {
  * Get all users (for HQ dashboard), excluding passwords.
  */
 const getAllUsers = async () => {
-    return User.findAll();
+    return User.findAll({ where: { role: 'user' } });
 };
 
 module.exports = {
