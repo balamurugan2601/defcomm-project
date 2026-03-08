@@ -28,33 +28,41 @@ const AlertsMonitor = () => {
             setLoading(true);
             const data = await getFlaggedMessages(filter);
 
-            // Step 1: Decrypt synchronously and show messages immediately
-            const decrypted = data.map((msg) => ({
-                ...msg,
-                decrypted: decryptMessage(msg.encryptedText),
-                isThreat: msg.securityStatus === "resolved", // treat resolved as already confirmed
-                analyzing: msg.securityStatus !== "resolved",
-            }));
+            // Step 1: Decrypt and immediately filter — only keep messages with trigger words or resolved ones
+            const threatKeywords = /attack|perimeter|breach|security|urgent|critical|hostile|engage|destroy|intercept/i;
 
-            // Show messages right away — no waiting for AI
+            const decrypted = data
+                .map((msg) => {
+                    const decryptedText = decryptMessage(msg.encryptedText);
+                    const isResolved = msg.securityStatus === "resolved";
+                    const hasTriggerWord = threatKeywords.test(decryptedText);
+
+                    // Skip messages that have no trigger words AND aren't resolved — they're not threats
+                    if (!hasTriggerWord && !isResolved) return null;
+
+                    return {
+                        ...msg,
+                        decrypted: decryptedText,
+                        isThreat: isResolved, // resolved = already confirmed threat
+                        analyzing: !isResolved && hasTriggerWord, // only analyze trigger-word messages
+                    };
+                })
+                .filter(Boolean); // remove nulls
+
+            // Show only relevant messages right away
             setMessages(decrypted);
             setLoading(false);
             setError(null);
 
-            // Step 2: Run AI analysis per-message in the background
-            const threatKeywords = /attack|perimeter|breach|security|urgent|critical|hostile|engage|destroy|intercept/i;
-            const pendingIds = new Set(decrypted.filter(m => m.analyzing).map(m => m.id));
+            // Step 2: Send ONLY trigger-word messages to Gemini (one at a time)
+            const toAnalyze = decrypted.filter((msg) => msg.analyzing);
+            const pendingIds = new Set(toAnalyze.map(m => m.id));
             setAnalyzingIds(pendingIds);
 
-            const toAnalyze = decrypted.filter((msg) => msg.analyzing);
-
             for (const msg of toAnalyze) {
-                let isThreat = false;
-                if (threatKeywords.test(msg.decrypted)) {
-                    // Wait 5 seconds BEFORE calling the API to respect Gemini free tier (15 RPM)
-                    await new Promise(r => setTimeout(r, 5000));
-                    isThreat = await analyzeThreat(msg.decrypted);
-                }
+                // Wait 5 seconds BEFORE calling the API to respect Gemini free tier (15 RPM)
+                await new Promise(r => setTimeout(r, 5000));
+                const isThreat = await analyzeThreat(msg.decrypted);
 
                 // Update this single message in state
                 setMessages((prev) =>
