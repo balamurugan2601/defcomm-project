@@ -140,3 +140,4 @@ export const analyzeThreat = async (text) => {
             return true; // Fallback to keyword logic on error
         }
     });
+};
