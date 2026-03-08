@@ -46,6 +46,13 @@ Is this an ACTUAL operational threat or is it SAFE? Respond with ONLY the word "
  * @returns {Promise<Response>} - The successful fetch response
  */
 const fetchWithRetry = async (text, maxRetries = 3) => {
+    if (!text || typeof text !== 'string' || text.trim() === '') {
+        console.error("Invalid or empty message provided for AI analysis.");
+        return null; // Early exit for invalid input
+    }
+
+    const fullPrompt = PROMPT.replace("{TEXT}", text);
+
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
         // Wait BEFORE the call (not after) to space out requests
         if (attempt > 0) {
@@ -54,12 +61,20 @@ const fetchWithRetry = async (text, maxRetries = 3) => {
             await new Promise(r => setTimeout(r, backoffMs));
         }
 
+        const payload = {
+            contents: [{ parts: [{ text: fullPrompt }] }],
+            generationConfig: {
+                temperature: 0.1, // Low temperature for consistent formatting
+                responseMimeType: "text/plain", // Request plain text for simple "THREAT" or "SAFE"
+            }
+        };
+
+        console.debug("GEMINI DUMP - Sending payload:", JSON.stringify(payload, null, 2));
+
         const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: PROMPT.replace("{TEXT}", text) }] }]
-            })
+            body: JSON.stringify(payload)
         });
 
         if (response.status !== 429) {
