@@ -52,8 +52,8 @@ const isDev = process.env.NODE_ENV !== 'production';
 
 const limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: isDev ? 0 : 100, // 0 means unlimited in some versions, or just set high
-    skip: () => isDev, // Completely skip in dev
+    max: 5000,
+    skip: () => true, // Completely disabled for demonstration purposes
     message: { message: 'Too many requests, please try again later.' },
     standardHeaders: true,
     legacyHeaders: false,
@@ -63,8 +63,8 @@ app.use('/api', limiter);
 // Stricter rate limit for auth endpoints
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: isDev ? 0 : 200,
-    skip: () => isDev, // Completely skip in dev
+    max: 5000,
+    skip: () => true, // Completely disabled for demonstration purposes
     message: { message: 'Too many authentication attempts, please try again later.' },
     standardHeaders: true,
     legacyHeaders: false,
