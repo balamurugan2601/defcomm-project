@@ -39,6 +39,7 @@ const Login = () => {
 
       // Login successful
       login(userData);
+      setLoading(false);
 
       // Redirect based on role
       if (userData.role === 'hq') {
@@ -47,7 +48,11 @@ const Login = () => {
         navigate('/chat');
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      if (err.code === 'ECONNABORTED' || err.message === 'Network Error' || !err.response) {
+        setError('Unable to connect to the server. Please check your connection or try again later.');
+      } else {
+        setError(err.response?.data?.message || 'Login failed. Please check your credentials.');
+      }
       setLoading(false);
     }
   };
